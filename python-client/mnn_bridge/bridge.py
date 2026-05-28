@@ -12,12 +12,13 @@ class MNNBridge:
         self.host = host or os.getenv("BRIDGE_HOST", "127.0.0.1")
         self.port = port or int(os.getenv("BRIDGE_PORT", 8080))
         self.base_url = f"http://{self.host}:{self.port}"
+        self.session = requests.Session() # Reuse TCP connections for efficiency
         logger.info(f"Initialized MNNBridge client connecting to {self.base_url}")
 
     def check_connection(self):
         """Verify if the Android Bridge is online."""
         try:
-            response = requests.get(f"{self.base_url}/status", timeout=5)
+            response = self.session.get(f"{self.base_url}/status", timeout=5)
             if response.status_code == 200:
                 try:
                     data = response.json()
