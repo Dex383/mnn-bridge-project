@@ -20,6 +20,8 @@ public class MNNBridgeService extends Service {
         super.onCreate();
         Log.d(TAG, "MNNBridgeService created");
         
+        stopServer(); // Ensure clean slate
+
         // Start the HTTP server on port 8080
         server = new MNNBridgeServer(8080);
         try {
@@ -30,6 +32,17 @@ public class MNNBridgeService extends Service {
         }
 
         startForegroundService();
+    }
+
+    private void stopServer() {
+        if (server != null) {
+            try {
+                server.stop();
+                Log.d(TAG, "Existing server stopped");
+            } catch (Exception e) {
+                Log.e(TAG, "Error stopping server: " + e.getMessage());
+            }
+        }
     }
 
     private void startForegroundService() {
