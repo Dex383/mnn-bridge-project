@@ -19,9 +19,13 @@ class MNNBridge:
         try:
             response = requests.get(f"{self.base_url}/status", timeout=5)
             if response.status_code == 200:
-                data = response.json()
-                logger.info(f"Bridge Status: ONLINE | Hardware: {data.get('hardware')}")
-                return True
+                try:
+                    data = response.json()
+                    logger.info(f"Bridge Status: ONLINE | Hardware: {data.get('hardware')}")
+                    return True
+                except json.JSONDecodeError:
+                    logger.error("Bridge returned 200 OK but the body was not valid JSON.")
+                    return False
             else:
                 logger.warning(f"Bridge returned error: {response.status_code}")
                 return False

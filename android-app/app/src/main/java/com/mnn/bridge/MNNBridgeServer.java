@@ -13,7 +13,8 @@ public class MNNBridgeServer extends NanoHTTPD {
     @Override
     public Response serve(IHTTPSession session) {
         String uri = session.getUri();
-        Log.d(TAG, "Received request: " + uri);
+        String remoteAddress = session.getRemoteAddress();
+        Log.d(TAG, String.format("Received request [%s] from %s", uri, remoteAddress));
 
         if (uri.equals("/status")) {
             return newFixedLengthResponse(Response.Status.OK, "application/json", 
