@@ -5,7 +5,7 @@ import android.util.Log;
 import org.json.JSONObject;
 import org.json.JSONArray;
 import java.io.*;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
 import java.util.Iterator;
 
@@ -13,7 +13,7 @@ public class ModelManager {
     private static final String TAG = "ModelManager";
     private static final String ALIAS_FILE = "model_aliases.json";
     private Context context;
-    private Map<String, String> aliases = new HashMap<>();
+    private Map<String, String> aliases = new ConcurrentHashMap<>();
 
     public ModelManager(Context context) {
         this.context = context;
@@ -42,7 +42,7 @@ public class ModelManager {
         }
     }
 
-    private void saveAliases() {
+    private synchronized void saveAliases() {
         JSONObject json = new JSONObject();
         try {
             for (Map.Entry<String, String> entry : aliases.entrySet()) {
@@ -58,6 +58,12 @@ public class ModelManager {
     }
 
     public boolean registerModel(String alias, String externalPath) {
+        // Basic path traversal protection
+        if (externalPath == null || externalPath.contains("..")) {
+            Log.e(TAG, "Invalid path provided: " + externalPath);
+            return false;
+        }
+
         File sourceFile = new File(externalPath);
         if (!sourceFile.exists()) {
             Log.e(TAG, "Source model file does not exist: " + externalPath);
