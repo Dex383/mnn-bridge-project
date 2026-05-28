@@ -21,10 +21,11 @@ public class MNNBridgeService extends Service {
         Log.d(TAG, "MNNBridgeService created");
 
         ModelManager modelManager = new ModelManager(this);
+        TensorDataManager dataManager = new TensorDataManager(this);
         stopServer(); // Ensure clean slate
 
         // Start the HTTP server on port 8080
-        server = new MNNBridgeServer(8080, modelManager);
+        server = new MNNBridgeServer(8080, modelManager, dataManager);
         try {
             server.start();
             Log.d(TAG, "Server started on port 8080");

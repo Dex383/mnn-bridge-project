@@ -8,10 +8,12 @@ import java.util.Map;
 public class MNNBridgeServer extends NanoHTTPD {
     private static final String TAG = "MNNBridgeServer";
     private ModelManager modelManager;
+    private TensorDataManager dataManager;
 
-    public MNNBridgeServer(int port, ModelManager modelManager) {
+    public MNNBridgeServer(int port, ModelManager modelManager, TensorDataManager dataManager) {
         super(port);
         this.modelManager = modelManager;
+        this.dataManager = dataManager;
     }
 
     @Override
