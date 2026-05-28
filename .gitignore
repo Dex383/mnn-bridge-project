@@ -1,0 +1,55 @@
+# Git ignore for MNN Bridge (Android + Python)
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# --- Android ---
+# Gradle
+.gradle/
+build/
+captures/
+*/build/
+
+# IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.classpath
+.project
+
+# Local Properties
+local.properties
+
+# APKs and Bundles
+*.apk
+*.ap_
+*.aab
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+*/.DS_Store
+*/Thumbs.db
+
+# --- Project Specific ---
+.env
+input.bin
+output.bin
+models/**/*
+!models/.gitkeep
