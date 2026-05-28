@@ -7,13 +7,19 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("MNNBridge")
 
 class MNNBridge:
-    def __init__(self, host=None, port=None):
+    def __init__(self, host=None, port=None, data_dir=None):
         # Use provided values or fallback to environment variables, then to defaults
         self.host = host or os.getenv("BRIDGE_HOST", "127.0.0.1")
         self.port = port or int(os.getenv("BRIDGE_PORT", 8080))
         self.base_url = f"http://{self.host}:{self.port}"
         self.session = requests.Session() # Reuse TCP connections for efficiency
+        
+        # Data plane directory: Where input.bin and output.bin are exchanged
+        # Default to a common Android external files path if not provided
+        self.data_dir = data_dir or os.getenv("BRIDGE_DATA_DIR", "/sdcard/Android/data/com.mnn.bridge/files")
+        
         logger.info(f"Initialized MNNBridge client connecting to {self.base_url}")
+        logger.info(f"Data plane directory: {self.data_dir}")
 
     def check_connection(self):
         """Verify if the Android Bridge is online."""
@@ -64,6 +70,51 @@ class MNNBridge:
         except requests.exceptions.RequestException as e:
             logger.error(f"Error unloading model: {e}")
             return False, str(e)
+
+    def infer(self, alias, input_data):
+        """
+        Perform inference:
+        1. Saves input_data (numpy array) to input.bin in the shared data directory.
+        2. Triggers the /infer endpoint on the Android Bridge.
+        3. Reads output.bin from the shared directory and returns it as a numpy array.
+        """
+        import numpy as np
+        
+        input_path = os.path.join(self.data_dir, "input.bin")
+        output_path = os.path.join(self.data_dir, "output.bin")
+
+        try:
+            # 1. Write input tensor to binary file
+            logger.info(f"Writing input tensor to {input_path}...")
+            # Ensure data is float32 as expected by the bridge
+            input_data = np.asanyarray(input_data, dtype=np.float32)
+            input_data.tofile(input_path)
+
+            # 2. Trigger inference via HTTP
+            logger.info(f"Triggering inference for model: {alias}...")
+            params = {"alias": alias}
+            response = self.session.get(f"{self.base_url}/infer", params=params, timeout=30)
+            
+            if response.status_code == 200:
+                data = response.json()
+                logger.info("Inference triggered successfully.")
+                
+                # 3. Read result from output.bin
+                if not os.path.exists(output_path):
+                    logger.error(f"Output file not found: {output_path}")
+                    return None, "Output file missing"
+                
+                output_data = np.fromfile(output_path, dtype=np.float32)
+                logger.info(f"Read output tensor with shape {output_data.shape}")
+                return output_data, "Success"
+            else:
+                logger.warning(f"Inference failed: {response.text}")
+                return None, response.text
+
+        except Exception as e:
+            logger.error(f"Error during inference: {e}")
+            return None, str(e)
+
 
 if __name__ == "__main__":
     # Simple test pulse

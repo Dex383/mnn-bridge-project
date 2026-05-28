@@ -73,6 +73,15 @@ public class ModelManager {
         // Copy to internal storage for stability
         String internalPath = context.getFilesDir() + "/models/" + alias + ".mnn";
         File destFile = new File(internalPath);
+        
+        // Optimization: If file exists and size matches, skip copying
+        if (destFile.exists() && destFile.length() == sourceFile.length()) {
+            Log.d(TAG, "Model already exists internally and size matches. Skipping copy: " + alias);
+            aliases.put(alias, internalPath);
+            saveAliases();
+            return true;
+        }
+
         destFile.getParentFile().mkdirs();
 
         try {
@@ -93,6 +102,18 @@ public class ModelManager {
 
     public boolean unloadModel(String alias) {
         if (aliases.containsKey(alias)) {
+            String path = aliases.get(alias);
+            
+            // Delete the physical file to prevent storage leaks
+            File file = new File(path);
+            if (file.exists()) {
+                if (!file.delete()) {
+                    Log.w(TAG, "Could not delete model file: " + path);
+                } else {
+                    Log.d(TAG, "Deleted internal model file: " + path);
+                }
+            }
+            
             aliases.remove(alias);
             saveAliases();
             return true;

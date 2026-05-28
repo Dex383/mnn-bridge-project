@@ -43,23 +43,27 @@ This document serves as the authoritative physical record of all changes, archit
 - **Logging**: Enhanced server logs to include the remote client's IP address.
 - **Resource Management**: Created `themes.xml` and updated the manifest to prevent resource-not-found crashes.
 
-### Phase 2: Model Orchestration (In Progress)
-- **Model Management**:
-    - Implemented `ModelManager.java` to handle model aliases.
-    - **Internal Storage Strategy**: Added logic to copy `.mnn` models from shared storage to the app's internal private directory for stability and performance.
-    - **Persistence**: Alias mappings are persisted in `model_aliases.json`.
-- **API Extension**:
-    - Added `/register` endpoint to the server to allow dynamic model registration from the client.
-- **Storage Permissions (Critical Fix)**:
-    - Integrated `MANAGE_EXTERNAL_STORAGE` permission to bypass Android's Scoped Storage restrictions.
-    - Implemented an automatic redirect in `MainActivity` to the system settings page if the permission is missing.
+### Phase 3: The Inference Loop & Deep Debugging
+- **Python Client Inference**:
+    - Implemented `MNNBridge.infer()` method in the Python client.
+    - Integrated binary data plane handling (saving/reading `input.bin` and `output.bin`).
+- **Race Condition Fix**:
+    - Implemented a synchronization mutex in `MNNBridgeServer.java` for the `/infer` endpoint to prevent concurrent binary file corruption.
+- **Performance Optimization**:
+    - Implemented a global model cache in `inference_engine.py` to avoid reloading the MNN interpreter and session on every request.
+- **Storage Optimization**:
+    - Updated `ModelManager.java` to avoid redundant internal copies if the model already exists and has the same size.
+    - Implemented automatic deletion of internal `.mnn` files when a model is unloaded via `/unload`.
+- **Integration Testing**:
+    - Added `python-client/examples/inference_test.py` to verify the end-to-end inference flow.
 
 ---
 
 ## 🚀 Current State
-- ** connectivity**: Fully operational and debugged.
-- **Model Orchestration**: Registration and Internal Copying implemented.
-- **Next Step**: Implement `register_model` in the Python client and move towards Phase 3 (Inference).
+- **Connectivity**: Fully operational and debugged.
+- **Model Orchestration**: Fully operational with internal storage cleanup.
+- **Inference Loop**: Fully operational, synchronized, and optimized.
+- **Next Step**: Phase 4 (Optimization & Stability), focusing on thermal monitoring, hardware backend prioritization (NPU > GPU > CPU), and advanced error handling.
 
 ## ⚠️ Known Technical Hurdles
 - **MNN Binaries**: The project relies on the MNN Python library. If the standard `pip` install fails on Android, a local `.whl` binary for `arm64-v8a` must be placed in `app/libs/`.

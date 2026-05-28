@@ -93,45 +93,49 @@ public class MNNBridgeServer extends NanoHTTPD {
         }
     }
 
+    private final Object inferenceLock = new Object();
+
     private Response handleInfer(IHTTPSession session) {
-        try {
-            Map<String, String> params = session.getParms();
-            String alias = params.get("alias");
-            
-            if (alias == null) {
-                return newFixedLengthResponse(Response.Status.BAD_REQUEST, "application/json", 
-                    "{\"status\": \"error\", \"message\": \"Missing model alias\"}");
-            }
+        synchronized (inferenceLock) {
+            try {
+                Map<String, String> params = session.getParms();
+                String alias = params.get("alias");
+                
+                if (alias == null) {
+                    return newFixedLengthResponse(Response.Status.BAD_REQUEST, "application/json", 
+                        "{\"status\": \"error\", \"message\": \"Missing model alias\"}");
+                }
 
-            String modelPath = modelManager.getInternalPath(alias);
-            if (modelPath == null) {
-                return newFixedLengthResponse(Response.Status.NOT_FOUND, "application/json", 
-                    "{\"status\": \"error\", \"message\": \"Model alias not found\"}");
-            }
+                String modelPath = modelManager.getInternalPath(alias);
+                if (modelPath == null) {
+                    return newFixedLengthResponse(Response.Status.NOT_FOUND, "application/json", 
+                        "{\"status\": \"error\", \"message\": \"Model alias not found\"}");
+                }
 
-            // Use TensorDataManager to get standard file paths
-            String inputPath = dataManager.getInputFile().getAbsolutePath();
-            String outputPath = dataManager.getOutputFile().getAbsolutePath();
+                // Use TensorDataManager to get standard file paths
+                String inputPath = dataManager.getInputFile().getAbsolutePath();
+                String outputPath = dataManager.getOutputFile().getAbsolutePath();
 
-            // Call the Python Inference Engine via Chaquopy
-            Python py = Python.getInstance();
-            PyObject engine = py.getModule("inference_engine");
-            PyObject result = engine.callAttr("run_inference", modelPath, inputPath, outputPath);
+                // Call the Python Inference Engine via Chaquopy
+                Python py = Python.getInstance();
+                PyObject engine = py.getModule("inference_engine");
+                PyObject result = engine.callAttr("run_inference", modelPath, inputPath, outputPath);
 
-            boolean success = result.get(0).convertToBoolean();
-            String message = result.get(1).toString();
+                boolean success = result.get(0).convertToBoolean();
+                String message = result.get(1).toString();
 
-            if (success) {
-                return newFixedLengthResponse(Response.Status.OK, "application/json", 
-                    "{\"status\": \"success\", \"message\": \"Inference complete\", \"output\": \"" + outputPath + "\"}");
-            } else {
+                if (success) {
+                    return newFixedLengthResponse(Response.Status.OK, "application/json", 
+                        "{\"status\": \"success\", \"message\": \"Inference complete\", \"output\": \"" + outputPath + "\"}");
+                } else {
+                    return newFixedLengthResponse(Response.Status.INTERNAL_SERVER_ERROR, "application/json", 
+                        "{\"status\": \"error\", \"message\": \"" + message + "\"}");
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error during inference: " + e.getMessage());
                 return newFixedLengthResponse(Response.Status.INTERNAL_SERVER_ERROR, "application/json", 
-                    "{\"status\": \"error\", \"message\": \"" + message + "\"}");
+                    "{\"status\": \"error\", \"message\": \"" + e.getMessage() + "\"}");
             }
-        } catch (Exception e) {
-            Log.e(TAG, "Error during inference: " + e.getMessage());
-            return newFixedLengthResponse(Response.Status.INTERNAL_SERVER_ERROR, "application/json", 
-                "{\"status\": \"error\", \"message\": \"" + e.getMessage() + "\"}");
         }
     }
 }
