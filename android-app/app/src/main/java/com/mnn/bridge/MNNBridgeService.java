@@ -19,11 +19,12 @@ public class MNNBridgeService extends Service {
     public void onCreate() {
         super.onCreate();
         Log.d(TAG, "MNNBridgeService created");
-        
+
+        ModelManager modelManager = new ModelManager(this);
         stopServer(); // Ensure clean slate
 
         // Start the HTTP server on port 8080
-        server = new MNNBridgeServer(8080);
+        server = new MNNBridgeServer(8080, modelManager);
         try {
             server.start();
             Log.d(TAG, "Server started on port 8080");
@@ -33,6 +34,7 @@ public class MNNBridgeService extends Service {
 
         startForegroundService();
     }
+
 
     private void stopServer() {
         if (server != null) {
