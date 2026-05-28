@@ -34,6 +34,37 @@ class MNNBridge:
             logger.error(f"Connection failed: {e}")
             return False
 
+    def register_model(self, alias, path):
+        """Register a model in the Android Bridge and copy it to internal storage."""
+        try:
+            params = {"alias": alias, "path": path}
+            response = self.session.get(f"{self.base_url}/register", params=params, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                logger.info(f"Model registered: {alias} -> {path}")
+                return True, data.get("message", "Success")
+            else:
+                logger.warning(f"Failed to register model {alias}: {response.text}")
+                return False, response.text
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Error registering model: {e}")
+            return False, str(e)
+
+    def unload_model(self, alias):
+        """Remove a model alias from the Android Bridge."""
+        try:
+            params = {"alias": alias}
+            response = self.session.get(f"{self.base_url}/unload", params=params, timeout=5)
+            if response.status_code == 200:
+                logger.info(f"Model unloaded: {alias}")
+                return True, response.json().get("message", "Success")
+            else:
+                logger.warning(f"Failed to unload model {alias}: {response.text}")
+                return False, response.text
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Error unloading model: {e}")
+            return False, str(e)
+
 if __name__ == "__main__":
     # Simple test pulse
     bridge = MNNBridge()

@@ -29,6 +29,10 @@ public class MNNBridgeServer extends NanoHTTPD {
             return handleRegister(session);
         }
 
+        if (uri.startsWith("/unload")) {
+            return handleUnload(session);
+        }
+
         return newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "Endpoint not found");
     }
 
@@ -52,6 +56,30 @@ public class MNNBridgeServer extends NanoHTTPD {
             }
         } catch (Exception e) {
             Log.e(TAG, "Error during register: " + e.getMessage());
+            return newFixedLengthResponse(Response.Status.INTERNAL_SERVER_ERROR, "application/json", 
+                "{\"status\": \"error\", \"message\": \"" + e.getMessage() + "\"}");
+        }
+    }
+
+    private Response handleUnload(IHTTPSession session) {
+        try {
+            Map<String, String> params = session.getParms();
+            String alias = params.get("alias");
+
+            if (alias == null) {
+                return newFixedLengthResponse(Response.Status.BAD_REQUEST, "application/json", 
+                    "{\"status\": \"error\", \"message\": \"Missing alias\"}");
+            }
+
+            if (modelManager.unloadModel(alias)) {
+                return newFixedLengthResponse(Response.Status.OK, "application/json", 
+                    "{\"status\": \"success\", \"message\": \"Model unloaded successfully\"}");
+            } else {
+                return newFixedLengthResponse(Response.Status.NOT_FOUND, "application/json", 
+                    "{\"status\": \"error\", \"message\": \"Alias not found\"}");
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error during unload: " + e.getMessage());
             return newFixedLengthResponse(Response.Status.INTERNAL_SERVER_ERROR, "application/json", 
                 "{\"status\": \"error\", \"message\": \"" + e.getMessage() + "\"}");
         }
