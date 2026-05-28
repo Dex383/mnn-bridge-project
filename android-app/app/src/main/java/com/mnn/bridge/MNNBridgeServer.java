@@ -1,6 +1,5 @@
 package com.mnn.bridge;
 
-import org.nanohttpd.Firesponsive;
 import org.nanohttpd.NanoHTTPD;
 import android.util.Log;
 
@@ -18,7 +17,7 @@ public class MNNBridgeServer extends NanoHTTPD {
 
         if (uri.equals("/status")) {
             return newFixedLengthResponse(Response.Status.OK, "application/json", 
-                "{"status": "online", "hardware": "Snapdragon 888", "engine": "MNN"}");
+                "{\"status\": \"online\", \"hardware\": \"Snapdragon 888\", \"engine\": \"MNN\"}");
         }
 
         return newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "Endpoint not found");

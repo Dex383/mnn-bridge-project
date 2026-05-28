@@ -1,5 +1,3 @@
-package mnn_bridge;
-
 import requests
 import json
 import logging
