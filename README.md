@@ -25,6 +25,10 @@ Termux operates in a restricted sandbox without direct access to low-level hardw
 
 *(Instructions will be added as the project develops)*
 
+## ⚠️ AI Disclaimer
+
+This project has been developed entirely using Artificial Intelligence. As such, the code is provided "as is" without any warranty. The author assumes no responsibility or liability for any errors, bugs, system instability, or damages to hardware or software that may result from the use or modification of this project. Use at your own risk.
+
 ## ⚖️ License
 
 This project is provided under a **Non-Commercial License**. You are free to use, modify, and distribute the code for personal, educational, or research purposes, but **commercial use is strictly prohibited**. See `LICENSE` for full details.
